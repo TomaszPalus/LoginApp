@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build, Security, Coverage & Release
+    name: Build, Security, Coverage, Release & Firebase
     runs-on: ubuntu-latest
 
     steps:
@@ -76,7 +76,7 @@ jobs:
 
       - name: Show release files
         run: |
-          find app/build/outputs/mapping -type f || true
+          find app/build/outputs -type f
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
@@ -85,12 +85,28 @@ jobs:
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
 
+      - name: Show mapping files
+        run: |
+          find app/build/outputs/mapping -type f || true
+
       - name: Upload ProGuard Mapping
         uses: actions/upload-artifact@v4
         with:
           name: release-mapping
           path: app/build/outputs/mapping/release/*
           if-no-files-found: warn
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Upload to Firebase App Distribution
+        run: |
+          firebase appdistribution:distribute app/build/outputs/apk/release/*.apk \
+            --app 1:932018268464:android:b69e9da2caeb104af000f5 \
+            --groups "beta-testers" \
+            --release-notes "Automatyczny build z GitHub Actions"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
   instrumented-tests:
     name: Emulator UI Tests
