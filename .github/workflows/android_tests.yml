@@ -35,10 +35,14 @@ jobs:
         run: chmod +x gradlew
 
       # --- SAST / MobSF ---
+      - name: Install mobsfscan
+        run: |
+          python -m pip install --upgrade pip
+          pip install mobsfscan
+
       - name: Run MobSF Static Analysis
-        uses: MobSF/mobsfscan-action@v1
-        with:
-          args: '. --sarif --output mobsf-results.sarif'
+        run: |
+          mobsfscan app/src/main --sarif --output mobsf-results.sarif
         continue-on-error: true
 
       - name: Upload MobSF Report
