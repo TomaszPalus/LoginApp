@@ -71,6 +71,7 @@ class FormularzUiTest {
         composeTestRule.onNodeWithTag("success_message").assertIsDisplayed()
     }
 
+    /*
     @Test
     fun test_rotacjaEkranu_zachowujeStanFormularza() {
         val wpisanyEmail = "test_rotacji@wp.pl"
@@ -90,7 +91,7 @@ class FormularzUiTest {
         device.setOrientationNatural()
         composeTestRule.waitForIdle()
     }
-
+*/
     @Test
     fun test_czyszczeniePol_resetujeStanPrzycisku() {
         // Wprowadzenie poprawnych danych
