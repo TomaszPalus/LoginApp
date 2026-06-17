@@ -34,13 +34,29 @@ jobs:
       - name: Grant execute permission for Gradle
         run: chmod +x gradlew
 
+      # --- SAST / MobSF ---
+      - name: Run MobSF Static Analysis
+        uses: MobSF/mobsfscan-action@v1
+        with:
+          args: '. --sarif --output mobsf-results.sarif'
+        continue-on-error: true
+
+      - name: Upload MobSF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobsf-security-report
+          path: mobsf-results.sarif
+
+      # --- Build ---
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      # --- Unit Tests ---
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
         continue-on-error: true
 
+      # --- Jacoco ---
       - name: Generate Jacoco coverage report
         run: ./gradlew jacocoTestReport
         continue-on-error: true
