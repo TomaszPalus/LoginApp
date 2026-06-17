@@ -1,3 +1,5 @@
+import org.gradle.testing.jacoco.tasks.JacocoReport
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.loginapp"
+
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -23,7 +26,6 @@ android {
     }
 
     buildTypes {
-
         debug {
             enableUnitTestCoverage = true
             enableAndroidTestCoverage = true
@@ -37,10 +39,12 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
@@ -55,21 +59,52 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
     testImplementation(libs.junit)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    // Wsparcie testów instrumentalnych JUnit4 i Jetpack Compose
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.0")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.0")
-
-    // UI Automator (potrzebny do obsługi rotacji ekranu z poziomu urządzenia)
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
 
-    // Podstawowe biblioteki AndroidX Test & Espresso Core
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*"
+    )
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") {
+        exclude(fileFilter)
+    }
+
+    val kotlinDebugTree = fileTree(
+        "${layout.buildDirectory.get()}/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes"
+    ) {
+        exclude(fileFilter)
+    }
+
+    classDirectories.setFrom(files(debugTree, kotlinDebugTree))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(layout.buildDirectory.get()) {
+        include(
+            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+            "**/*.exec",
+            "**/*.ec"
+        )
+    })
 }
